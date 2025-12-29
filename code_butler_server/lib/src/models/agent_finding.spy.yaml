@@ -11,8 +11,4 @@ fields:
   codeSnippet: String?
   suggestedFix: String?
   createdAt: DateTime
-relations:
-  pullRequest:
-    type: PullRequest
-    field: pullRequestId
 

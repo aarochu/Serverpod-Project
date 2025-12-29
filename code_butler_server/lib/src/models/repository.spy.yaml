@@ -6,7 +6,4 @@ fields:
   owner: String
   defaultBranch: String
   lastReviewedAt: DateTime?
-indexes:
-  - fields: url
-    type: unique
 

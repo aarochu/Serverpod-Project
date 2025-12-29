@@ -10,8 +10,4 @@ fields:
   filesChanged: int
   createdAt: DateTime
   updatedAt: DateTime
-relations:
-  repository:
-    type: Repository
-    field: repositoryId
 
