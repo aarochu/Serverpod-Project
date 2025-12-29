@@ -51,7 +51,7 @@ The following steps require Dart SDK and Flutter SDK to be installed:
 3. **Verify Server Starts**
    ```bash
    cd code_butler_server
-   dart run bin/server.dart
+   dart run lib/server.dart
    ```
    Server should start on `http://localhost:8080`
 

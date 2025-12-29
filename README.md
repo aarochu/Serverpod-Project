@@ -54,7 +54,7 @@ docker compose up -d
 ```bash
 cd code_butler_server
 serverpod create-migration
-serverpod apply-migrations
+serverpod apply-migrations --apply-migrations
 ```
 
 ### 5. Configure API Keys
@@ -67,7 +67,7 @@ Edit the following files with your credentials:
 
 ```bash
 cd code_butler_server
-dart run bin/server.dart
+dart run lib/server.dart
 ```
 
 The server will start on `http://localhost:8080`.

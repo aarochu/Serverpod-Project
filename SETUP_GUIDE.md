@@ -56,7 +56,7 @@ serverpod create-migration
 serverpod apply-migrations --apply-migrations
 
 # 7. Start the server
-dart run bin/server.dart
+dart run lib/server.dart
 ```
 
 ## Verification Checklist
