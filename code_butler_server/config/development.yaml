@@ -18,3 +18,15 @@ logging:
   logSlowQueries: true
   logLevel: info
 
+# GitHub API configuration
+githubToken: YOUR_GITHUB_TOKEN
+
+# Gemini API configuration
+geminiApiKey: YOUR_GEMINI_API_KEY
+
+# Agent configuration
+agents:
+  maxFilesToProcess: 100
+  fileTimeoutSeconds: 30
+  concurrentTaskLimit: 5
+

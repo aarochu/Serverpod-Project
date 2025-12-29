@@ -1,9 +1,18 @@
 import 'dart:async';
 import 'package:serverpod/serverpod.dart';
 import 'package:code_butler_server/src/generated/protocol.dart';
+import 'package:code_butler_server/src/agents/agent_orchestrator.dart';
+
+// Helper to avoid await warning for fire-and-forget futures
+void unawaited(Future<void> future) {
+  future.catchError((error) {
+    // Errors are logged in the background task
+  });
+}
 
 class ReviewEndpoint extends Endpoint {
   /// Starts a new review session for a pull request
+  /// Spawns async background task to run agent processing
   Future<ReviewSession> startReview(Session session, int pullRequestId) async {
     try {
       final now = DateTime.now();
@@ -21,10 +30,28 @@ class ReviewEndpoint extends Endpoint {
 
       final created = await ReviewSession.db.insertRow(session, reviewSession);
       session.log('Started review session: ${created.id} for PR $pullRequestId');
+
+      // Spawn async background task to run agent processing
+      // Don't await - let it run asynchronously
+      unawaited(_runAgentProcessing(session, created.id!));
+
       return created;
     } catch (e) {
       session.log('Error starting review: $e', level: LogLevel.error);
       rethrow;
+    }
+  }
+
+  /// Runs agent processing in background
+  Future<void> _runAgentProcessing(Session session, int reviewSessionId) async {
+    try {
+      session.log('Starting agent processing for review session $reviewSessionId');
+      final orchestrator = AgentOrchestrator(session);
+      await orchestrator.processReview(reviewSessionId);
+      session.log('Agent processing completed for review session $reviewSessionId');
+    } catch (e) {
+      session.log('Error in agent processing: $e', level: LogLevel.error);
+      // Error already handled in orchestrator, just log here
     }
   }
 

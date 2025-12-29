@@ -6,6 +6,9 @@ abstract class BaseAgent {
   /// The type identifier for this agent
   String get agentType;
 
+  /// Session for database operations and logging
+  Session? session;
+
   /// Analyzes a pull request and returns findings
   /// 
   /// [session] - Database session
