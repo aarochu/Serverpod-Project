@@ -10,4 +10,6 @@ fields:
   errorMessage: String?
   createdAt: DateTime
   updatedAt: DateTime
+indexes:
+  - status
 

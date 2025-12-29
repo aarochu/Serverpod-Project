@@ -11,4 +11,7 @@ fields:
   codeSnippet: String?
   suggestedFix: String?
   createdAt: DateTime
+indexes:
+  - pullRequestId
+  - severity
 

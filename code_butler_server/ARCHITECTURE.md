@@ -56,6 +56,85 @@ Code Butler is a multi-agent code review system built on Serverpod 3. It uses sp
             └───────────────┘
 ```
 
+## Deployment Considerations
+
+### Scaling Strategy
+
+**Horizontal Scaling:**
+- Serverpod Cloud supports multiple server instances
+- Load balancing handled automatically
+- Database connection pooling (5-20 connections)
+
+**Vertical Scaling:**
+- Increase server resources in Serverpod Cloud dashboard
+- Adjust connection pool size based on load
+- Monitor memory usage and scale accordingly
+
+### Security Model
+
+**Authentication:**
+- GitHub OAuth for user authentication
+- API key validation for external services
+- Webhook signature verification
+
+**Authorization:**
+- Repository-level access control
+- User preferences for personalized experience
+
+**Data Encryption:**
+- HTTPS for all communications
+- Encrypted database connections
+- Secure storage of API keys in environment variables
+
+### Data Retention Policies
+
+**Review Data:**
+- Keep reviews for 90 days by default
+- Archive old reviews to cold storage
+- Configurable retention period
+
+**Performance Logs:**
+- Retain for 30 days
+- Aggregate for long-term metrics
+- Clean up old logs automatically
+
+**Cache:**
+- TTL-based expiration (1 hour default)
+- LRU eviction for memory management
+- Clear on repository updates
+
+### Backup and Disaster Recovery
+
+**Database Backups:**
+- Daily automated backups via Serverpod Cloud
+- Manual backup before migrations
+- Point-in-time recovery available
+
+**Disaster Recovery:**
+- Multi-region deployment option
+- Automated failover in Serverpod Cloud
+- Rollback procedures documented
+
+### Cost Estimation
+
+**Small Scale (1-10 repos, <100 reviews/day):**
+- Server: ~$20/month
+- Database: ~$15/month
+- API calls: ~$10/month
+- **Total: ~$45/month**
+
+**Medium Scale (10-100 repos, 100-1000 reviews/day):**
+- Server: ~$50/month
+- Database: ~$30/month
+- API calls: ~$50/month
+- **Total: ~$130/month**
+
+**Large Scale (100+ repos, 1000+ reviews/day):**
+- Server: ~$150/month
+- Database: ~$100/month
+- API calls: ~$200/month
+- **Total: ~$450/month**
+
 ## Components
 
 ### Agents

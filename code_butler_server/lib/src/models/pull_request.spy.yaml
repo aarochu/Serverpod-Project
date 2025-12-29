@@ -10,4 +10,6 @@ fields:
   filesChanged: int
   createdAt: DateTime
   updatedAt: DateTime
+indexes:
+  - repositoryId
 

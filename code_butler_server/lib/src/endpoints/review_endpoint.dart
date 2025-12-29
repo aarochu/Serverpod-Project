@@ -46,7 +46,17 @@ class ReviewEndpoint extends Endpoint {
   Future<void> _runAgentProcessing(Session session, int reviewSessionId) async {
     try {
       session.log('Starting agent processing for review session $reviewSessionId');
-      final orchestrator = AgentOrchestrator(session);
+      
+      // Check for demo mode
+      final demoMode = session.serverpod.config.extra?['demoMode'] as bool? ?? false;
+      
+      final orchestrator = AgentOrchestrator(
+        session,
+        demoMode: demoMode,
+        fileTimeoutSeconds: demoMode ? 10 : 30,
+        maxFilesPerReview: demoMode ? 50 : 500,
+      );
+      
       await orchestrator.processReview(reviewSessionId);
       session.log('Agent processing completed for review session $reviewSessionId');
     } catch (e) {

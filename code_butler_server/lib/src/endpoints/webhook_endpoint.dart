@@ -6,6 +6,27 @@ import 'package:code_butler_server/src/services/job_processor.dart';
 
 /// Webhook endpoint for GitHub event handling
 class WebhookEndpoint extends Endpoint {
+  /// Simulates webhook for demo purposes
+  Future<void> simulateWebhook(
+    Session session,
+    String eventType,
+    Map<String, dynamic> payload,
+  ) async {
+    try {
+      session.log('Simulating webhook: $eventType');
+      
+      if (eventType == 'pull_request') {
+        await handlePullRequest(session, payload, null);
+      } else if (eventType == 'push') {
+        await handlePush(session, payload, null);
+      } else {
+        throw Exception('Unknown event type: $eventType');
+      }
+    } catch (e) {
+      session.log('Error simulating webhook: $e', level: LogLevel.error);
+      rethrow;
+    }
+  }
   /// Handles pull request events from GitHub
   Future<void> handlePullRequest(
     Session session,

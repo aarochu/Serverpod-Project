@@ -1,20 +1,93 @@
 server:
-  publicHost: localhost
-  publicPort: 8080
+  publicHost: ${PUBLIC_HOST}
+  publicPort: 443
   publicScheme: https
-  privateHost: localhost
+  privateHost: ${PRIVATE_HOST}
   privatePort: 8081
   privateScheme: https
 
 database:
-  host: localhost
-  port: 5432
-  name: code_butler
-  username: postgres
-  password: password
+  host: ${DATABASE_HOST}
+  port: ${DATABASE_PORT}
+  name: ${DATABASE_NAME}
+  username: ${DATABASE_USERNAME}
+  password: ${DATABASE_PASSWORD}
 
 logging:
   logAllQueries: false
   logSlowQueries: true
   logLevel: warning
+  logRetentionDays: 30
 
+# GitHub API configuration (from environment variables)
+githubToken: ${GITHUB_TOKEN}
+
+# Gemini API configuration (from environment variables)
+geminiApiKey: ${GEMINI_API_KEY}
+
+# Webhook configuration
+webhooks:
+  secret: ${WEBHOOK_SECRET}
+  enabled: true
+
+# CORS configuration for Flutter web app
+cors:
+  allowedOrigins:
+    - ${FLUTTER_APP_DOMAIN}
+  allowedMethods:
+    - GET
+    - POST
+    - PUT
+    - DELETE
+    - OPTIONS
+  allowedHeaders:
+    - Content-Type
+    - Authorization
+    - X-Requested-With
+
+# Connection pooling
+connectionPooling:
+  minConnections: 5
+  maxConnections: 20
+  idleTimeout: 300
+
+# Rate limiting
+rateLimiting:
+  enabled: true
+  requestsPerMinute: 60
+  burstSize: 10
+
+# Agent configuration
+agents:
+  maxFilesToProcess: 500
+  fileTimeoutSeconds: 30
+  concurrentTaskLimit: 5
+
+# Autofix configuration
+autofix:
+  enabled: true
+  createPR: true
+  confidenceThreshold: 0.7
+
+# Caching configuration
+caching:
+  enabled: true
+  ttlSeconds: 3600
+  maxCacheSize: 1000
+
+# Optimization configuration
+optimization:
+  maxFilesPerReview: 500
+  maxTimePerReview: 600
+  maxCriticalFindings: 50
+  skipTestFiles: true
+  skipGeneratedCode: true
+
+# Job processing configuration
+jobs:
+  maxWorkers: 5
+  retryAttempts: 3
+  retryDelaySeconds: 60
+
+# Demo mode (disabled in production)
+demoMode: false

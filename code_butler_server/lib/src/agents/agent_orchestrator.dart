@@ -26,6 +26,7 @@ class AgentOrchestrator {
   final FileFilter fileFilter;
   final RepositoryCache? repositoryCache;
   final FindingsCache findingsCache;
+  final bool demoMode;
 
   AgentOrchestrator(
     this.session, {
@@ -36,8 +37,14 @@ class AgentOrchestrator {
     this.maxCriticalFindings = 10,
     FileFilter? fileFilter,
     this.repositoryCache,
+    this.demoMode = false,
   }) : fileFilter = fileFilter ?? FileFilter(session),
-       findingsCache = FindingsCache(session);
+       findingsCache = FindingsCache(session) {
+    // In demo mode, use faster timeouts
+    if (demoMode) {
+      // Use shorter timeouts for demo
+    }
+  }
 
   /// Processes a complete review workflow for a review session
   Future<void> processReview(int reviewSessionId) async {
