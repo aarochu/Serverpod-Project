@@ -83,22 +83,6 @@ class RequestValidator {
   }
 }
 
-/// Request validation middleware
-class ValidationMiddleware extends EndpointMiddleware {
-  @override
-  Future<Object?> handleRequest(
-    Session session,
-    EndpointRequest request,
-    EndpointRequestHandler next,
-  ) async {
-    try {
-      // Validate request parameters
-      // This is a basic implementation - extend for specific endpoints
-      return await next(session, request);
-    } catch (e) {
-      session.log('Validation error: $e', level: LogLevel.warning);
-      rethrow;
-    }
-  }
-}
+// Validation middleware would be implemented at endpoint level
+// See RepositoryEndpoint for example usage
 

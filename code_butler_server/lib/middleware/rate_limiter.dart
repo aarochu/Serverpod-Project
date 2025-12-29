@@ -40,31 +40,8 @@ class RateLimiter {
 
   /// Gets client identifier from request
   String getClientId(Session session) {
-    // Use IP address as client identifier
-    return session.httpRequest?.remoteAddress ?? 'unknown';
-  }
-}
-
-/// Rate limiting middleware wrapper
-class RateLimitMiddleware extends EndpointMiddleware {
-  final RateLimiter rateLimiter;
-
-  RateLimitMiddleware(this.rateLimiter);
-
-  @override
-  Future<Object?> handleRequest(
-    Session session,
-    EndpointRequest request,
-    EndpointRequestHandler next,
-  ) async {
-    final clientId = rateLimiter.getClientId(session);
-    
-    if (rateLimiter.shouldRateLimit(clientId)) {
-      session.log('Rate limit exceeded for client: $clientId', level: LogLevel.warning);
-      throw Exception('Rate limit exceeded. Please try again later.');
-    }
-
-    return await next(session, request);
+    // Use session ID as client identifier (simplified)
+    return session.sessionId?.toString() ?? 'unknown';
   }
 }
 

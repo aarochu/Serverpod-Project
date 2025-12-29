@@ -1,23 +1,42 @@
 import 'dart:io';
 import 'package:serverpod/serverpod.dart';
 import 'package:code_butler_server/src/generated/protocol.dart';
+import 'package:code_butler_server/lib/server.dart' as server;
 
 /// Seed script to populate database with demo data
 /// Run with: dart run lib/scripts/seed_demo_data.dart
+/// Note: This script requires serverpod generate to be run first
 Future<void> main(List<String> args) async {
   print('🌱 Seeding demo data...');
-
+  print('⚠️  Note: Run "serverpod generate" first to generate protocol classes');
+  print('⚠️  This script is a template - update imports after code generation');
+  
+  // Script requires generated protocol classes
+  // For now, provide instructions
+  print('');
+  print('To use this script:');
+  print('1. Run: serverpod generate');
+  print('2. Update imports in this file');
+  print('3. Run: dart run lib/scripts/seed_demo_data.dart');
+  
+  exit(0);
+  
+  /* 
   // Initialize Serverpod
   final pod = Serverpod(
     [],
     Protocol(),
-    Endpoints(),
+    server.Endpoints(),
   );
 
   await pod.start();
 
   try {
-    final session = Session(pod.server);
+    final session = Session(
+      server: pod.server,
+      endpoint: null,
+      enableLogging: true,
+    );
 
     // Clear existing data (optional - comment out to preserve data)
     print('Clearing existing data...');
@@ -51,8 +70,9 @@ Future<void> main(List<String> args) async {
     print('❌ Error seeding data: $e');
     exit(1);
   } finally {
-    await pod.stop();
+    // await pod.stop();
   }
+  */
 }
 
 Future<void> _clearDatabase(Session session) async {

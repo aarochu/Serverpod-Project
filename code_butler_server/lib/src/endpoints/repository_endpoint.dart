@@ -1,6 +1,6 @@
 import 'package:serverpod/serverpod.dart';
 import 'package:code_butler_server/src/generated/protocol.dart';
-import 'package:code_butler_server/middleware/request_validator.dart';
+import 'package:code_butler_server/lib/middleware/request_validator.dart';
 
 class RepositoryEndpoint extends Endpoint {
   /// Creates a new repository in the database
