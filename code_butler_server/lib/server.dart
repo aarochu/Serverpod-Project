@@ -1,5 +1,7 @@
 import 'package:serverpod/serverpod.dart';
-import 'package:code_butler_server/src/endpoints/example_endpoint.dart';
+import 'package:code_butler_server/src/endpoints/repository_endpoint.dart';
+import 'package:code_butler_server/src/endpoints/review_endpoint.dart';
+import 'package:code_butler_server/src/endpoints/pull_request_endpoint.dart';
 
 // This is the starting point of your server. All server endpoints are referenced from this file.
 
@@ -17,8 +19,10 @@ void main(List<String> args) {
 class Endpoints extends EndpointDispatch {
   @override
   void initializeEndpoints(Server server) {
-    // Register all endpoints here
-    // ExampleEndpoint.register(server);
+    // Register all endpoints
+    RepositoryEndpoint.register(server);
+    ReviewEndpoint.register(server);
+    PullRequestEndpoint.register(server);
   }
 }
 
