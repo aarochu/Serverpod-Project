@@ -24,7 +24,7 @@
 4. **Git & GitHub**
    - ✅ Git repository initialized
    - ✅ Proper .gitignore for Dart/Flutter
-   - ✅ GitHub repository created: **https://github.com/joshnaimcwx/code-butler**
+   - ✅ GitHub repository created: **https://github.com/joshnaim1/code-butler**
    - ✅ Code pushed to main branch
 
 ## ⚠️ Pending (Requires Dart/Flutter Installation)
@@ -74,7 +74,7 @@ Or follow the manual steps in `SETUP_GUIDE.md`.
 
 ## Repository URL
 
-**https://github.com/joshnaimcwx/code-butler**
+**https://github.com/joshnaim1/code-butler**
 
 All code has been committed and pushed to the `main` branch.
 
