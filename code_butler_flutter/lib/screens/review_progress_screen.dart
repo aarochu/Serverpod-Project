@@ -38,12 +38,12 @@ class _ReviewProgressScreenState extends ConsumerState<ReviewProgressScreen> {
     // Poll every 2 seconds
     _pollTimer = Timer.periodic(const Duration(seconds: 2), (timer) {
       final notifier = ref.read(reviewSessionProvider.notifier);
-      notifier.refreshStatus(widget.sessionId);
+      notifier.getReviewStatus(widget.sessionId);
     });
 
     // Initial fetch
     final notifier = ref.read(reviewSessionProvider.notifier);
-    notifier.refreshStatus(widget.sessionId);
+    notifier.getReviewStatus(widget.sessionId);
   }
 
   Color _getStatusColor(String status) {
@@ -103,7 +103,7 @@ class _ReviewProgressScreenState extends ConsumerState<ReviewProgressScreen> {
                 FilledButton.icon(
                   onPressed: () {
                     final notifier = ref.read(reviewSessionProvider.notifier);
-                    notifier.refreshStatus(widget.sessionId);
+                    notifier.getReviewStatus(widget.sessionId);
                   },
                   icon: const Icon(Icons.refresh),
                   label: const Text('Retry'),

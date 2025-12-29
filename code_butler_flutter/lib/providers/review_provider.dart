@@ -7,30 +7,34 @@ class ReviewSessionNotifier extends StateNotifier<AsyncValue<ReviewSession>> {
   ReviewSessionNotifier() : super(const AsyncValue.loading());
 
   /// Start a new review session
-  Future<void> startReview(int repositoryId, int prNumber) async {
+  /// Takes only pullRequestId (backend API: startReview(pullRequestId))
+  Future<void> startReview(int pullRequestId) async {
     state = const AsyncValue.loading();
     try {
       final client = ClientManager.client;
-      // Assuming endpoint: client.review.startReview(repositoryId, prNumber)
-      // This will be available after Person 1 creates the backend endpoints
-      final session = await client.review.startReview(
-        repositoryId: repositoryId,
-        prNumber: prNumber,
-      );
+      // Backend endpoint: startReview(session, pullRequestId)
+      final session = await client.review.startReview(pullRequestId);
       state = AsyncValue.data(session);
     } catch (error, stackTrace) {
       state = AsyncValue.error(error, stackTrace);
     }
   }
 
-  /// Refresh the status of the current review session
-  Future<void> refreshStatus(int sessionId) async {
+  /// Get the status of the current review session
+  /// Backend API: getReviewStatus(session, reviewSessionId)
+  Future<void> getReviewStatus(int sessionId) async {
     try {
       final client = ClientManager.client;
-      // Assuming endpoint: client.review.refreshStatus(sessionId)
-      // This will be available after Person 1 creates the backend endpoints
-      final session = await client.review.refreshStatus(sessionId: sessionId);
-      state = AsyncValue.data(session);
+      // Backend endpoint returns ReviewSession? (nullable)
+      final session = await client.review.getReviewStatus(sessionId);
+      if (session != null) {
+        state = AsyncValue.data(session);
+      } else {
+        state = AsyncValue.error(
+          Exception('Review session not found'),
+          StackTrace.current,
+        );
+      }
     } catch (error, stackTrace) {
       state = AsyncValue.error(error, stackTrace);
     }
@@ -46,11 +50,11 @@ final reviewSessionProvider =
 /// Provider family for fetching findings by pull request ID
 /// 
 /// Usage: ref.watch(findingsProvider(pullRequestId))
+/// Backend API: getFindings(session, pullRequestId, {severity?})
 final findingsProvider =
     FutureProvider.family<List<AgentFinding>, int>((ref, pullRequestId) async {
   final client = ClientManager.client;
-  // Assuming endpoint: client.findings.getFindings(pullRequestId)
-  // This will be available after Person 1 creates the backend endpoints
-  return await client.findings.getFindings(pullRequestId: pullRequestId);
+  // Backend endpoint is on review endpoint: client.review.getFindings(pullRequestId)
+  return await client.review.getFindings(pullRequestId);
 });
 

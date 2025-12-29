@@ -20,13 +20,12 @@ final createRepositoryProvider = FutureProvider.family<Repository, ({
   String defaultBranch,
 })>((ref, params) async {
   final client = ClientManager.client;
-  // Assuming endpoint: client.repository.createRepository(...)
-  // This will be available after Person 1 creates the backend endpoints
+  // Backend endpoint uses positional parameters: createRepository(name, url, owner, defaultBranch)
   final repository = await client.repository.createRepository(
-    name: params.name,
-    url: params.url,
-    owner: params.owner,
-    defaultBranch: params.defaultBranch,
+    params.name,
+    params.url,
+    params.owner,
+    params.defaultBranch,
   );
   
   // Invalidate the list provider to refresh the repository list
