@@ -3,8 +3,10 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:code_butler_client/code_butler_client.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'dart:convert';
 import '../providers/review_provider.dart';
+import '../providers/autofix_provider.dart';
 import '../widgets/finding_detail_modal.dart';
 
 /// Sort options for findings
@@ -42,6 +44,8 @@ class _FindingsListScreenState extends ConsumerState<FindingsListScreen>
   late TabController _tabController;
   final TextEditingController _searchController = TextEditingController();
   bool _allExpanded = false;
+  bool _batchMode = false;
+  final Set<int> _selectedFindings = {};
 
   @override
   void initState() {
@@ -274,43 +278,103 @@ class _FindingsListScreenState extends ConsumerState<FindingsListScreen>
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('Findings (PR #${widget.prId})'),
+        title: Text(_batchMode 
+            ? '${_selectedFindings.length} selected' 
+            : 'Findings (PR #${widget.prId})'),
         actions: [
-          PopupMenuButton(
-            icon: const Icon(Icons.share),
-            itemBuilder: (context) => [
-              PopupMenuItem(
-                child: const Row(
-                  children: [
-                    Icon(Icons.code),
-                    SizedBox(width: 8),
-                    Text('Export as JSON'),
-                  ],
+          if (_batchMode) ...[
+            IconButton(
+              icon: const Icon(Icons.check_circle),
+              onPressed: () async {
+                if (_selectedFindings.isEmpty) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Please select findings to apply fixes')),
+                  );
+                  return;
+                }
+                
+                final autofixNotifier = ref.read(autofixProvider.notifier);
+                await autofixNotifier.batchApplyFix(_selectedFindings.toList());
+                
+                final autofixState = ref.read(autofixProvider);
+                if (autofixState.status == AutofixStatus.success) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Fixes applied successfully!'),
+                      backgroundColor: Colors.green,
+                    ),
+                  );
+                  setState(() {
+                    _batchMode = false;
+                    _selectedFindings.clear();
+                  });
+                } else if (autofixState.status == AutofixStatus.failed) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Failed to apply fixes: ${autofixState.error ?? "Unknown error"}'),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                }
+              },
+              tooltip: 'Apply fixes to selected',
+            ),
+            IconButton(
+              icon: const Icon(Icons.close),
+              onPressed: () {
+                setState(() {
+                  _batchMode = false;
+                  _selectedFindings.clear();
+                });
+              },
+              tooltip: 'Cancel batch mode',
+            ),
+          ] else ...[
+            IconButton(
+              icon: const Icon(Icons.select_all),
+              onPressed: () {
+                setState(() {
+                  _batchMode = true;
+                });
+              },
+              tooltip: 'Batch select',
+            ),
+            PopupMenuButton(
+              icon: const Icon(Icons.share),
+              itemBuilder: (context) => [
+                PopupMenuItem(
+                  child: const Row(
+                    children: [
+                      Icon(Icons.code),
+                      SizedBox(width: 8),
+                      Text('Export as JSON'),
+                    ],
+                  ),
+                  onTap: () async {
+                    final findings = await findingsAsync.value;
+                    if (findings != null) {
+                      await _exportFindings(findings, 'json');
+                    }
+                  },
                 ),
-                onTap: () async {
-                  final findings = await findingsAsync.value;
-                  if (findings != null) {
-                    await _exportFindings(findings, 'json');
-                  }
-                },
-              ),
-              PopupMenuItem(
-                child: const Row(
-                  children: [
-                    Icon(Icons.table_chart),
-                    SizedBox(width: 8),
-                    Text('Export as CSV'),
-                  ],
+                PopupMenuItem(
+                  child: const Row(
+                    children: [
+                      Icon(Icons.table_chart),
+                      SizedBox(width: 8),
+                      Text('Export as CSV'),
+                    ],
+                  ),
+                  onTap: () async {
+                    final findings = await findingsAsync.value;
+                    if (findings != null) {
+                      await _exportFindings(findings, 'csv');
+                    }
+                  },
                 ),
-                onTap: () async {
-                  final findings = await findingsAsync.value;
-                  if (findings != null) {
-                    await _exportFindings(findings, 'csv');
-                  }
-                },
-              ),
-            ],
-          ),
+              ],
+            ),
+          ],
         ],
         bottom: TabBar(
           controller: _tabController,
@@ -730,12 +794,62 @@ class _FindingsListScreenState extends ConsumerState<FindingsListScreen>
               return _EnhancedFindingCard(
                 finding: finding,
                 severityColor: _getSeverityColor(finding.severity),
+                batchMode: _batchMode,
+                isSelected: _selectedFindings.contains(finding.id),
                 onTap: () {
-                  showModalBottomSheet(
-                    context: context,
-                    isScrollControlled: true,
-                    builder: (context) => FindingDetailModal(finding: finding),
-                  );
+                  if (_batchMode) {
+                    setState(() {
+                      if (_selectedFindings.contains(finding.id)) {
+                        _selectedFindings.remove(finding.id);
+                      } else {
+                        _selectedFindings.add(finding.id);
+                      }
+                    });
+                  } else {
+                    showModalBottomSheet(
+                      context: context,
+                      isScrollControlled: true,
+                      builder: (context) => FindingDetailModal(finding: finding),
+                    );
+                  }
+                },
+                onApplyFix: () async {
+                  final autofixNotifier = ref.read(autofixProvider.notifier);
+                  await autofixNotifier.applyFix(finding.id);
+                  
+                  final autofixState = ref.read(autofixProvider);
+                  if (autofixState.status == AutofixStatus.success && autofixState.prUrl != null) {
+                    if (mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Row(
+                            children: [
+                              const Text('Fix applied! '),
+                              TextButton(
+                                onPressed: () async {
+                                  if (await canLaunchUrl(Uri.parse(autofixState.prUrl!))) {
+                                    await launchUrl(Uri.parse(autofixState.prUrl!));
+                                  }
+                                },
+                                child: const Text('View PR'),
+                              ),
+                            ],
+                          ),
+                          backgroundColor: Colors.green,
+                          duration: const Duration(seconds: 5),
+                        ),
+                      );
+                    }
+                  } else if (autofixState.status == AutofixStatus.failed) {
+                    if (mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('Failed to apply fix: ${autofixState.error ?? "Unknown error"}'),
+                          backgroundColor: Colors.red,
+                        ),
+                      );
+                    }
+                  }
                 },
               );
             }).toList(),
@@ -747,15 +861,21 @@ class _FindingsListScreenState extends ConsumerState<FindingsListScreen>
 }
 
 /// Enhanced finding card with more details
-class _EnhancedFindingCard extends StatelessWidget {
+class _EnhancedFindingCard extends ConsumerWidget {
   final AgentFinding finding;
   final Color severityColor;
   final VoidCallback onTap;
+  final bool batchMode;
+  final bool isSelected;
+  final VoidCallback? onApplyFix;
 
   const _EnhancedFindingCard({
     required this.finding,
     required this.severityColor,
     required this.onTap,
+    this.batchMode = false,
+    this.isSelected = false,
+    this.onApplyFix,
   });
 
   IconData _getAgentIcon(String agentType) {
@@ -776,12 +896,23 @@ class _EnhancedFindingCard extends StatelessWidget {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final autofixState = ref.watch(autofixProvider);
+    final isApplying = autofixState.status == AutofixStatus.applying && 
+                       autofixState.findingId == finding.id;
+    final isApplied = autofixState.status == AutofixStatus.success && 
+                      autofixState.findingId == finding.id;
+    
     return ListTile(
-      leading: Container(
-        width: 4,
-        color: severityColor,
-      ),
+      leading: batchMode
+          ? Checkbox(
+              value: isSelected,
+              onChanged: (value) => onTap(),
+            )
+          : Container(
+              width: 4,
+              color: severityColor,
+            ),
       title: Row(
         children: [
           // Agent icon
@@ -865,7 +996,36 @@ class _EnhancedFindingCard extends StatelessWidget {
           ],
         ],
       ),
-      trailing: const Icon(Icons.chevron_right),
+      trailing: batchMode
+          ? null
+          : Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (finding.suggestedFix != null && 
+                    finding.suggestedFix!.isNotEmpty &&
+                    onApplyFix != null) ...[
+                  if (isApplying)
+                    const Padding(
+                      padding: EdgeInsets.all(8.0),
+                      child: SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      ),
+                    )
+                  else if (isApplied)
+                    const Icon(Icons.check_circle, color: Colors.green)
+                  else
+                    IconButton(
+                      icon: const Icon(Icons.auto_fix_high),
+                      onPressed: onApplyFix,
+                      tooltip: 'Apply fix',
+                      color: Theme.of(context).colorScheme.primary,
+                    ),
+                ],
+                const Icon(Icons.chevron_right),
+              ],
+            ),
       onTap: onTap,
       isThreeLine: true,
     );

@@ -5,6 +5,8 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:code_butler_client/code_butler_client.dart';
 import '../providers/dashboard_provider.dart';
+import '../providers/notification_provider.dart';
+import '../screens/notifications_screen.dart';
 
 /// Dashboard screen with analytics and metrics
 class DashboardScreen extends ConsumerWidget {
@@ -27,10 +29,49 @@ class DashboardScreen extends ConsumerWidget {
     final recentSessionsAsync = ref.watch(recentReviewSessionsProvider);
     final timeRange = ref.watch(timeRangeProvider);
 
+    final unreadCount = ref.watch(unreadCountProvider);
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Dashboard'),
         actions: [
+          // Notification badge
+          Stack(
+            children: [
+              IconButton(
+                icon: const Icon(Icons.notifications),
+                onPressed: () {
+                  context.push('/notifications');
+                },
+                tooltip: 'Notifications',
+              ),
+              if (unreadCount > 0)
+                Positioned(
+                  right: 8,
+                  top: 8,
+                  child: Container(
+                    padding: const EdgeInsets.all(4),
+                    decoration: const BoxDecoration(
+                      color: Colors.red,
+                      shape: BoxShape.circle,
+                    ),
+                    constraints: const BoxConstraints(
+                      minWidth: 16,
+                      minHeight: 16,
+                    ),
+                    child: Text(
+                      unreadCount > 9 ? '9+' : '$unreadCount',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                ),
+            ],
+          ),
           // Time range selector
           SegmentedButton<TimeRange>(
             segments: const [

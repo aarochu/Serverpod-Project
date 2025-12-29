@@ -494,9 +494,21 @@ class _RepositoryCard extends StatelessWidget {
               ],
             ],
           ),
-          trailing: IconButton(
-            icon: const Icon(Icons.arrow_forward_ios),
-            onPressed: onTap,
+          trailing: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              IconButton(
+                icon: const Icon(Icons.settings),
+                onPressed: () {
+                  context.go('/repositories/${repository.id}/webhooks');
+                },
+                tooltip: 'Webhook settings',
+              ),
+              IconButton(
+                icon: const Icon(Icons.arrow_forward_ios),
+                onPressed: onTap,
+              ),
+            ],
           ),
           isThreeLine: true,
         ),

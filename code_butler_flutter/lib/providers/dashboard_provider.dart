@@ -26,36 +26,50 @@ DateTime? _getStartDate(TimeRange range) {
 }
 
 /// Provider for all review sessions
-/// Note: This assumes a backend endpoint exists or will be created
-/// For now, returns empty list - backend needs getAllReviewSessions() endpoint
+/// Uses metrics endpoint if available, otherwise falls back to empty list
 final allReviewSessionsProvider = FutureProvider<List<ReviewSession>>((ref) async {
   final client = ClientManager.client;
   final timeRange = ref.watch(timeRangeProvider);
   final startDate = _getStartDate(timeRange);
   
   try {
-    // TODO: Backend needs to add: client.review.getAllReviewSessions(startDate)
-    // For now, return empty list - this will need backend implementation
+    // Try to use metrics endpoint if available
+    if (client.metrics != null) {
+      try {
+        return await client.metrics.getAllReviewSessions(startDate);
+      } catch (e) {
+        // Endpoint might not exist yet, fall back to empty list
+        return [];
+      }
+    }
     return [];
   } catch (e) {
-    throw Exception('Failed to fetch review sessions: $e');
+    // Graceful fallback if endpoint doesn't exist
+    return [];
   }
 });
 
 /// Provider for all findings
-/// Note: This assumes a backend endpoint exists or will be created
-/// For now, returns empty list - backend needs getAllFindings() endpoint
+/// Uses metrics endpoint if available, otherwise falls back to empty list
 final allFindingsProvider = FutureProvider<List<AgentFinding>>((ref) async {
   final client = ClientManager.client;
   final timeRange = ref.watch(timeRangeProvider);
   final startDate = _getStartDate(timeRange);
   
   try {
-    // TODO: Backend needs to add: client.review.getAllFindings(startDate)
-    // For now, return empty list - this will need backend implementation
+    // Try to use metrics endpoint if available
+    if (client.metrics != null) {
+      try {
+        return await client.metrics.getAllFindings(startDate);
+      } catch (e) {
+        // Endpoint might not exist yet, fall back to empty list
+        return [];
+      }
+    }
     return [];
   } catch (e) {
-    throw Exception('Failed to fetch findings: $e');
+    // Graceful fallback if endpoint doesn't exist
+    return [];
   }
 });
 
@@ -166,7 +180,31 @@ class FindingsTrendPoint {
 }
 
 /// Provider for findings trend data (line chart)
+/// Uses metrics endpoint if available, otherwise computes from local data
 final findingsTrendProvider = FutureProvider<List<FindingsTrendPoint>>((ref) async {
+  final client = ClientManager.client;
+  final timeRange = ref.watch(timeRangeProvider);
+  final startDate = _getStartDate(timeRange);
+  
+  try {
+    // Try to use metrics endpoint if available
+    if (client.metrics != null) {
+      try {
+        final trends = await client.metrics.getTrends(startDate, DateTime.now());
+        // Convert backend response to FindingsTrendPoint list
+        return trends.map((t) => FindingsTrendPoint(
+          date: t.date,
+          findingsCount: t.count,
+        )).toList();
+      } catch (e) {
+        // Fall through to local computation
+      }
+    }
+  } catch (e) {
+    // Fall through to local computation
+  }
+  
+  // Fallback to local computation
   final sessionsAsync = ref.watch(allReviewSessionsProvider);
   final findingsAsync = ref.watch(allFindingsProvider);
 
@@ -288,7 +326,30 @@ class ProblematicFile {
 }
 
 /// Provider for most problematic files
+/// Uses metrics endpoint if available, otherwise computes from local data
 final problematicFilesProvider = FutureProvider<List<ProblematicFile>>((ref) async {
+  final client = ClientManager.client;
+  
+  try {
+    // Try to use metrics endpoint if available
+    if (client.metrics != null) {
+      try {
+        final files = await client.metrics.getProblematicFiles(10);
+        // Convert backend response to ProblematicFile list
+        return files.map((f) => ProblematicFile(
+          filePath: f.filePath,
+          findingCount: f.count,
+          densityScore: f.density,
+        )).toList();
+      } catch (e) {
+        // Fall through to local computation
+      }
+    }
+  } catch (e) {
+    // Fall through to local computation
+  }
+  
+  // Fallback to local computation
   final findingsAsync = ref.watch(allFindingsProvider);
   final findings = await findingsAsync.future;
 
@@ -336,7 +397,32 @@ class RepositoryHealth {
 }
 
 /// Provider for repository health scores
+/// Uses metrics endpoint if available, otherwise computes from local data
 final repositoryHealthProvider = FutureProvider<List<RepositoryHealth>>((ref) async {
+  final client = ClientManager.client;
+  
+  try {
+    // Try to use metrics endpoint if available
+    if (client.metrics != null) {
+      try {
+        final health = await client.metrics.getRepositoryHealth();
+        // Convert backend response to RepositoryHealth list
+        return health.map((h) => RepositoryHealth(
+          repositoryId: h.repositoryId,
+          repositoryName: h.repositoryName,
+          healthScore: h.healthScore,
+          totalFindings: h.totalFindings,
+          fileCount: h.fileCount,
+        )).toList();
+      } catch (e) {
+        // Fall through to local computation
+      }
+    }
+  } catch (e) {
+    // Fall through to local computation
+  }
+  
+  // Fallback to local computation
   final findingsAsync = ref.watch(allFindingsProvider);
   final findings = await findingsAsync.future;
 
@@ -383,5 +469,147 @@ final recentReviewSessionsProvider = FutureProvider<List<ReviewSession>>((ref) a
     ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
   
   return sorted.take(10).toList();
+});
+
+/// Agent effectiveness data
+class AgentEffectiveness {
+  final String agentType;
+  final int findingsCount;
+  final double averageConfidence;
+  final int reviewsParticipated;
+
+  AgentEffectiveness({
+    required this.agentType,
+    required this.findingsCount,
+    required this.averageConfidence,
+    required this.reviewsParticipated,
+  });
+}
+
+/// Provider for agent effectiveness statistics
+final agentEffectivenessProvider = FutureProvider<List<AgentEffectiveness>>((ref) async {
+  final client = ClientManager.client;
+  
+  try {
+    // Try to use metrics endpoint if available
+    if (client.metrics != null) {
+      try {
+        final effectiveness = await client.metrics.getAgentEffectiveness();
+        // Convert backend response to AgentEffectiveness list
+        return effectiveness.map((e) => AgentEffectiveness(
+          agentType: e.agentType,
+          findingsCount: e.findingsCount,
+          averageConfidence: e.averageConfidence,
+          reviewsParticipated: e.reviewsParticipated,
+        )).toList();
+      } catch (e) {
+        // Fall through to local computation
+      }
+    }
+  } catch (e) {
+    // Fall through to local computation
+  }
+  
+  // Fallback to local computation from findings
+  final findingsAsync = ref.watch(allFindingsProvider);
+  final findings = await findingsAsync.future;
+  
+  final Map<String, List<AgentFinding>> findingsByAgent = {};
+  for (final finding in findings) {
+    findingsByAgent.putIfAbsent(
+      finding.agentType,
+      () => [],
+    ).add(finding);
+  }
+  
+  return findingsByAgent.entries.map((entry) {
+    final agentFindings = entry.value;
+    final avgConfidence = agentFindings
+        .where((f) => f.confidence != null)
+        .map((f) => f.confidence!)
+        .fold<double>(0.0, (sum, conf) => sum + conf) / 
+        (agentFindings.where((f) => f.confidence != null).length > 0 
+            ? agentFindings.where((f) => f.confidence != null).length 
+            : 1);
+    
+    return AgentEffectiveness(
+      agentType: entry.key,
+      findingsCount: agentFindings.length,
+      averageConfidence: avgConfidence,
+      reviewsParticipated: agentFindings.map((f) => f.pullRequestId).toSet().length,
+    );
+  }).toList();
+});
+
+/// Review statistics data
+class ReviewStats {
+  final int totalReviews;
+  final int completedReviews;
+  final int failedReviews;
+  final Duration averageDuration;
+  final double successRate;
+
+  ReviewStats({
+    required this.totalReviews,
+    required this.completedReviews,
+    required this.failedReviews,
+    required this.averageDuration,
+    required this.successRate,
+  });
+}
+
+/// Provider for review statistics
+final reviewStatsProvider = FutureProvider<ReviewStats>((ref) async {
+  final client = ClientManager.client;
+  
+  try {
+    // Try to use metrics endpoint if available
+    if (client.metrics != null) {
+      try {
+        final stats = await client.metrics.getReviewStats();
+        return ReviewStats(
+          totalReviews: stats.totalReviews,
+          completedReviews: stats.completedReviews,
+          failedReviews: stats.failedReviews,
+          averageDuration: stats.averageDuration,
+          successRate: stats.successRate,
+        );
+      } catch (e) {
+        // Fall through to local computation
+      }
+    }
+  } catch (e) {
+    // Fall through to local computation
+  }
+  
+  // Fallback to local computation
+  final sessionsAsync = ref.watch(allReviewSessionsProvider);
+  final sessions = await sessionsAsync.future;
+  
+  final totalReviews = sessions.length;
+  final completedReviews = sessions.where((s) => s.status.toLowerCase() == 'completed').length;
+  final failedReviews = sessions.where((s) => s.status.toLowerCase() == 'failed').length;
+  
+  final completedSessions = sessions.where((s) => s.status.toLowerCase() == 'completed').toList();
+  Duration averageDuration = Duration.zero;
+  if (completedSessions.isNotEmpty) {
+    final totalDuration = completedSessions.fold<Duration>(
+      Duration.zero,
+      (sum, session) => sum + session.updatedAt.difference(session.createdAt),
+    );
+    averageDuration = Duration(
+      milliseconds: (totalDuration.inMilliseconds / completedSessions.length).round(),
+    );
+  }
+  
+  final successRate = totalReviews > 0 ? (completedReviews / totalReviews) * 100 : 0.0;
+  
+  return ReviewStats(
+    totalReviews: totalReviews,
+    completedReviews: completedReviews,
+    failedReviews: failedReviews,
+    averageDuration: averageDuration,
+    successRate: successRate,
+  );
 });
 

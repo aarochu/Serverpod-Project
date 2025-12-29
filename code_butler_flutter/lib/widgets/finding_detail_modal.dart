@@ -2,12 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_highlight/flutter_highlight.dart';
 import 'package:flutter_highlight/themes/github.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:code_butler_client/code_butler_client.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
+import '../providers/autofix_provider.dart';
 
 /// Modal widget for displaying detailed finding information
-class FindingDetailModal extends StatefulWidget {
+class FindingDetailModal extends ConsumerStatefulWidget {
   final AgentFinding finding;
 
   const FindingDetailModal({
@@ -16,10 +18,10 @@ class FindingDetailModal extends StatefulWidget {
   });
 
   @override
-  State<FindingDetailModal> createState() => _FindingDetailModalState();
+  ConsumerState<FindingDetailModal> createState() => _FindingDetailModalState();
 }
 
-class _FindingDetailModalState extends State<FindingDetailModal> {
+class _FindingDetailModalState extends ConsumerState<FindingDetailModal> {
   bool _isResolved = false;
   bool _isIgnored = false;
   bool _showComparison = false;
@@ -553,16 +555,85 @@ class _FindingDetailModalState extends State<FindingDetailModal> {
                                 ),
                               ),
                               const SizedBox(height: 12),
-                              FilledButton.icon(
-                                onPressed: () {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(
-                                      content: Text('Apply fix functionality coming soon'),
+                              Consumer(
+                                builder: (context, ref, child) {
+                                  final autofixState = ref.watch(autofixProvider);
+                                  final isApplying = autofixState.status == AutofixStatus.applying && 
+                                                     autofixState.findingId == widget.finding.id;
+                                  final isApplied = autofixState.status == AutofixStatus.success && 
+                                                    autofixState.findingId == widget.finding.id;
+                                  final hasError = autofixState.status == AutofixStatus.failed && 
+                                                   autofixState.findingId == widget.finding.id;
+                                  
+                                  return FilledButton.icon(
+                                    onPressed: isApplying || isApplied
+                                        ? null
+                                        : () async {
+                                            final autofixNotifier = ref.read(autofixProvider.notifier);
+                                            await autofixNotifier.applyFix(widget.finding.id);
+                                            
+                                            final state = ref.read(autofixProvider);
+                                            if (state.status == AutofixStatus.success && state.prUrl != null) {
+                                              if (mounted) {
+                                                ScaffoldMessenger.of(context).showSnackBar(
+                                                  SnackBar(
+                                                    content: Row(
+                                                      children: [
+                                                        const Text('Fix applied! '),
+                                                        TextButton(
+                                                          onPressed: () async {
+                                                            if (await canLaunchUrl(Uri.parse(state.prUrl!))) {
+                                                              await launchUrl(Uri.parse(state.prUrl!));
+                                                            }
+                                                          },
+                                                          child: const Text('View PR'),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                    backgroundColor: Colors.green,
+                                                    duration: const Duration(seconds: 5),
+                                                  ),
+                                                );
+                                              }
+                                            } else if (state.status == AutofixStatus.failed) {
+                                              if (mounted) {
+                                                ScaffoldMessenger.of(context).showSnackBar(
+                                                  SnackBar(
+                                                    content: Text('Failed to apply fix: ${state.error ?? "Unknown error"}'),
+                                                    backgroundColor: Colors.red,
+                                                  ),
+                                                );
+                                              }
+                                            }
+                                          },
+                                    icon: isApplying
+                                        ? const SizedBox(
+                                            width: 16,
+                                            height: 16,
+                                            child: CircularProgressIndicator(
+                                              strokeWidth: 2,
+                                              valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                            ),
+                                          )
+                                        : isApplied
+                                            ? const Icon(Icons.check_circle)
+                                            : const Icon(Icons.auto_fix_high),
+                                    label: Text(
+                                      isApplying
+                                          ? 'Applying...'
+                                          : isApplied
+                                              ? 'Fix Applied'
+                                              : 'Apply Fix',
+                                    ),
+                                    style: FilledButton.styleFrom(
+                                      backgroundColor: isApplied
+                                          ? Colors.green
+                                          : hasError
+                                              ? Colors.red
+                                              : null,
                                     ),
                                   );
                                 },
-                                icon: const Icon(Icons.check),
-                                label: const Text('Apply Fix'),
                               ),
                             ],
                           ),
