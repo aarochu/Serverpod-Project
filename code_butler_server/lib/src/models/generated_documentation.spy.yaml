@@ -10,8 +10,4 @@ fields:
   verificationIssues: String?
   createdAt: DateTime
   updatedAt: DateTime
-relations:
-  pullRequest:
-    type: PullRequest
-    field: pullRequestId
 
