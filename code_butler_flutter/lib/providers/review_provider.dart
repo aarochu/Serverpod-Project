@@ -58,3 +58,15 @@ final findingsProvider =
   return await client.review.getFindings(pullRequestId);
 });
 
+/// Stream provider for review progress updates
+/// Backend API: watchReviewProgress(session, reviewSessionId) returns Stream<String>
+/// Format: "status:progress:currentFile"
+final reviewProgressStreamProvider =
+    StreamProvider.family<String, int>((ref, sessionId) async* {
+  final client = ClientManager.client;
+  // Backend endpoint: client.review.watchReviewProgress(sessionId)
+  await for (final update in client.review.watchReviewProgress(sessionId)) {
+    yield update;
+  }
+});
+

@@ -3,6 +3,8 @@ import '../screens/home_screen.dart';
 import '../screens/repository_list_screen.dart';
 import '../screens/review_progress_screen.dart';
 import '../screens/findings_list_screen.dart';
+import '../screens/pull_request_list_screen.dart';
+import '../screens/dashboard_screen.dart';
 
 /// Application router configuration using GoRouter
 final appRouter = GoRouter(
@@ -14,6 +16,13 @@ final appRouter = GoRouter(
     GoRoute(
       path: '/repositories',
       builder: (context, state) => const RepositoryListScreen(),
+    ),
+    GoRoute(
+      path: '/repositories/:repoId/pull-requests',
+      builder: (context, state) {
+        final repoId = int.parse(state.pathParameters['repoId']!);
+        return PullRequestListScreen(repositoryId: repoId);
+      },
     ),
     GoRoute(
       path: '/review/:sessionId',
@@ -28,6 +37,10 @@ final appRouter = GoRouter(
         final prId = int.parse(state.pathParameters['prId']!);
         return FindingsListScreen(prId: prId);
       },
+    ),
+    GoRoute(
+      path: '/dashboard',
+      builder: (context, state) => const DashboardScreen(),
     ),
   ],
 );
