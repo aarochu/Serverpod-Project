@@ -1,0 +1,12 @@
+class: UserPreference
+table: code_butler_user_preference
+fields:
+  userId: String
+  findingType: String
+  action: String
+  frequency: int
+  lastUpdated: DateTime
+indexes:
+  - userId
+  - findingType
+

@@ -1,0 +1,12 @@
+class: AppliedFix
+table: code_butler_applied_fix
+fields:
+  findingId: int
+  fixCode: String
+  appliedAt: DateTime
+  status: String
+  prUrl: String?
+indexes:
+  - findingId
+  - status
+

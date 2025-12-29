@@ -28,6 +28,8 @@ class NavigatorAgent extends BaseAgent {
   Map<String, List<String>> _dependencyGraph = {};
   Session? _session;
 
+  String? get clonedRepoPath => _clonedRepoPath;
+
   /// Clones a repository to a temporary directory
   Future<String> cloneRepository(String url, String branch) async {
     try {

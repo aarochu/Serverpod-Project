@@ -10,18 +10,34 @@ import 'package:code_butler_server/src/agents/performance_agent.dart';
 import 'package:code_butler_server/src/agents/documentation_agent.dart';
 import 'package:code_butler_server/src/agents/verifier_agent.dart';
 import 'package:code_butler_server/src/services/github_service.dart';
+import 'package:code_butler_server/src/services/file_filter.dart';
+import 'package:code_butler_server/src/services/repository_cache.dart';
+import 'package:code_butler_server/src/services/findings_cache.dart';
+import 'package:code_butler_server/src/generated/protocol.dart';
 
 /// Orchestrates the review process by coordinating multiple agents
 class AgentOrchestrator {
   final Session session;
   final int concurrentTaskLimit;
   final int fileTimeoutSeconds;
+  final int maxFilesPerReview;
+  final int maxTimePerReview;
+  final int maxCriticalFindings;
+  final FileFilter fileFilter;
+  final RepositoryCache? repositoryCache;
+  final FindingsCache findingsCache;
 
   AgentOrchestrator(
     this.session, {
     this.concurrentTaskLimit = 5,
     this.fileTimeoutSeconds = 30,
-  });
+    this.maxFilesPerReview = 100,
+    this.maxTimePerReview = 300,
+    this.maxCriticalFindings = 10,
+    FileFilter? fileFilter,
+    this.repositoryCache,
+  }) : fileFilter = fileFilter ?? FileFilter(session),
+       findingsCache = FindingsCache(session);
 
   /// Processes a complete review workflow for a review session
   Future<void> processReview(int reviewSessionId) async {
@@ -59,7 +75,20 @@ class AgentOrchestrator {
       
 
       final fileMetadataList = navigatorAgent.fileMetadataList;
-      final sortedFiles = navigatorAgent.getFilesToAnalyze();
+      var sortedFiles = navigatorAgent.getFilesToAnalyze();
+      
+      // Apply file filtering
+      final clonedRepoPath = navigatorAgent.clonedRepoPath ?? '';
+      sortedFiles = fileFilter.filterFiles(sortedFiles, clonedRepoPath);
+      
+      // Apply intelligent prioritization
+      sortedFiles = _prioritizeFiles(sortedFiles, reviewSession);
+      
+      // Limit files if configured
+      if (maxFilesPerReview > 0 && sortedFiles.length > maxFilesPerReview) {
+        session.log('Limiting files to $maxFilesPerReview (found ${sortedFiles.length})');
+        sortedFiles = sortedFiles.take(maxFilesPerReview).toList();
+      }
       
       await _updateProgress(reviewSessionId, 20, 100, 'Repository cloned, ${sortedFiles.length} files to analyze');
 
@@ -69,6 +98,8 @@ class AgentOrchestrator {
       final allFindings = <AgentFinding>[...navigatorFindings];
       int filesProcessed = 0;
       final totalFiles = sortedFiles.length;
+      final startTime = DateTime.now();
+      int criticalFindingsCount = allFindings.where((f) => f.severity == 'critical').length;
 
       // Process files in parallel batches
       for (int i = 0; i < sortedFiles.length; i += concurrentTaskLimit) {
@@ -85,6 +116,22 @@ class AgentOrchestrator {
 
         for (final findings in batchResults) {
           allFindings.addAll(findings);
+          criticalFindingsCount += findings.where((f) => f.severity == 'critical').length;
+        }
+
+        // Early termination if too many critical findings
+        if (maxCriticalFindings > 0 && criticalFindingsCount >= maxCriticalFindings) {
+          session.log('Early termination: $criticalFindingsCount critical findings (limit: $maxCriticalFindings)');
+          await _updateStatus(reviewSessionId, 'completed', 'Too many critical findings detected');
+          break;
+        }
+
+        // Check time limit
+        final elapsed = DateTime.now().difference(startTime).inSeconds;
+        if (maxTimePerReview > 0 && elapsed >= maxTimePerReview) {
+          session.log('Time limit reached: ${elapsed}s (limit: ${maxTimePerReview}s)');
+          await _updateStatus(reviewSessionId, 'completed', 'Time limit reached');
+          break;
         }
 
         filesProcessed += batch.length;
@@ -255,6 +302,7 @@ class AgentOrchestrator {
     String language,
     int pullRequestId,
   ) async {
+      final startTime = DateTime.now();
       try {
         final readerAgent = ReaderAgent();
         final analysis = await readerAgent.analyzeFile(filePath, language);
@@ -280,13 +328,41 @@ class AgentOrchestrator {
         final stored = await Future.wait(
           findings.map((f) => AgentFinding.db.insertRow(session, f)),
         );
+        
+        // Log performance
+        final executionTime = DateTime.now().difference(startTime).inMilliseconds;
+        await _logPerformance('reader', filePath, executionTime);
+        
         return stored;
       }
+
+      // Log performance even if no findings
+      final executionTime = DateTime.now().difference(startTime).inMilliseconds;
+      await _logPerformance('reader', filePath, executionTime);
 
       return [];
     } catch (e) {
       session.log('ReaderAgent error for $filePath: $e', level: LogLevel.error);
+      final executionTime = DateTime.now().difference(startTime).inMilliseconds;
+      await _logPerformance('reader', filePath, executionTime);
       return [];
+    }
+  }
+
+  /// Logs performance metrics
+  Future<void> _logPerformance(String agentType, String? filePath, int executionTimeMs) async {
+    try {
+      final log = PerformanceLog(
+        agentType: agentType,
+        filePath: filePath,
+        executionTimeMs: executionTimeMs,
+        memoryUsageMB: null, // Would measure in production
+        queryCount: null,
+        createdAt: DateTime.now(),
+      );
+      await PerformanceLog.db.insertRow(session, log);
+    } catch (e) {
+      session.log('Error logging performance: $e', level: LogLevel.error);
     }
   }
 

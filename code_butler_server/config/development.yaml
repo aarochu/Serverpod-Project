@@ -30,3 +30,34 @@ agents:
   fileTimeoutSeconds: 30
   concurrentTaskLimit: 5
 
+# Autofix configuration
+autofix:
+  enabled: true
+  createPR: true
+  confidenceThreshold: 0.7
+
+# Caching configuration
+caching:
+  enabled: true
+  ttlSeconds: 3600
+  maxCacheSize: 1000
+
+# Optimization configuration
+optimization:
+  maxFilesPerReview: 100
+  maxTimePerReview: 300
+  maxCriticalFindings: 10
+  skipTestFiles: true
+  skipGeneratedCode: true
+
+# Webhook configuration
+webhooks:
+  secret: YOUR_WEBHOOK_SECRET
+  enabled: true
+
+# Job processing configuration
+jobs:
+  maxWorkers: 3
+  retryAttempts: 3
+  retryDelaySeconds: 60
+

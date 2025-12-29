@@ -1,0 +1,15 @@
+class: PatternLibrary
+table: code_butler_pattern_library
+fields:
+  pattern: String
+  language: String
+  category: String
+  fixTemplate: String
+  confidence: double
+  occurrenceCount: int
+  lastSeen: DateTime
+indexes:
+  - language
+  - category
+  - confidence
+

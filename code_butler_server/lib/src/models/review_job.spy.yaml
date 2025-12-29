@@ -1,0 +1,16 @@
+class: ReviewJob
+table: code_butler_review_job
+fields:
+  pullRequestId: int
+  status: String
+  priority: int
+  retryCount: int
+  errorMessage: String?
+  createdAt: DateTime
+  startedAt: DateTime?
+  completedAt: DateTime?
+indexes:
+  - status
+  - priority
+  - createdAt
+
