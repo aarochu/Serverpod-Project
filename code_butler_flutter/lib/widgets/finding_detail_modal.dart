@@ -3,6 +3,8 @@ import 'package:flutter/services.dart';
 import 'package:flutter_highlight/flutter_highlight.dart';
 import 'package:flutter_highlight/themes/github.dart';
 import 'package:code_butler_client/code_butler_client.dart';
+import 'package:share_plus/share_plus.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 /// Modal widget for displaying detailed finding information
 class FindingDetailModal extends StatefulWidget {
@@ -20,6 +22,8 @@ class FindingDetailModal extends StatefulWidget {
 class _FindingDetailModalState extends State<FindingDetailModal> {
   bool _isResolved = false;
   bool _isIgnored = false;
+  bool _showComparison = false;
+  String? _detectedLanguage;
 
   Color _getSeverityColor(String severity) {
     switch (severity.toLowerCase()) {
@@ -71,6 +75,133 @@ class _FindingDetailModalState extends State<FindingDetailModal> {
         SnackBar(content: Text('$label copied to clipboard')),
       );
     }
+  }
+
+  String _detectLanguage(String? filePath, String? codeSnippet) {
+    if (filePath != null) {
+      final extension = filePath.split('.').last.toLowerCase();
+      switch (extension) {
+        case 'dart':
+          return 'dart';
+        case 'js':
+        case 'jsx':
+          return 'javascript';
+        case 'ts':
+        case 'tsx':
+          return 'typescript';
+        case 'py':
+          return 'python';
+        case 'java':
+          return 'java';
+        case 'cpp':
+        case 'cc':
+        case 'cxx':
+          return 'cpp';
+        case 'c':
+          return 'c';
+        case 'go':
+          return 'go';
+        case 'rs':
+          return 'rust';
+        case 'rb':
+          return 'ruby';
+        case 'php':
+          return 'php';
+        case 'swift':
+          return 'swift';
+        case 'kt':
+          return 'kotlin';
+        case 'html':
+          return 'html';
+        case 'css':
+          return 'css';
+        case 'json':
+          return 'json';
+        case 'yaml':
+        case 'yml':
+          return 'yaml';
+        case 'md':
+          return 'markdown';
+        case 'sh':
+        case 'bash':
+          return 'bash';
+        default:
+          return 'dart'; // Default
+      }
+    }
+    return 'dart'; // Default
+  }
+
+  String _buildContextCode(String? codeSnippet, int? lineNumber) {
+    if (codeSnippet == null || codeSnippet.isEmpty) {
+      return '';
+    }
+
+    final lines = codeSnippet.split('\n');
+    final targetLineIndex = lineNumber != null && lineNumber > 0 
+        ? (lineNumber - 1).clamp(0, lines.length - 1)
+        : 0;
+
+    // Get 10 lines before and after
+    final startIndex = (targetLineIndex - 10).clamp(0, lines.length);
+    final endIndex = (targetLineIndex + 11).clamp(0, lines.length);
+    
+    final contextLines = lines.sublist(startIndex, endIndex);
+    final contextStartLine = startIndex + 1;
+
+    // Build code with line numbers
+    final buffer = StringBuffer();
+    for (int i = 0; i < contextLines.length; i++) {
+      final lineNum = contextStartLine + i;
+      final isTargetLine = lineNum == lineNumber;
+      buffer.writeln('${lineNum.toString().padLeft(4)} | ${contextLines[i]}');
+    }
+
+    return buffer.toString();
+  }
+
+  Future<void> _openGitHubLink() async {
+    // Construct GitHub URL
+    // Format: {repoUrl}/blob/{branch}/{filePath}#L{lineNumber}
+    // Note: Would need repository URL and branch from context
+    // For now, show a placeholder
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('GitHub link functionality requires repository context'),
+      ),
+    );
+  }
+
+  Future<void> _shareFinding() async {
+    final buffer = StringBuffer();
+    buffer.writeln('Finding: ${widget.finding.severity.toUpperCase()}');
+    buffer.writeln('Category: ${widget.finding.category}');
+    buffer.writeln('Agent: ${widget.finding.agentType}');
+    buffer.writeln('');
+    buffer.writeln('Message:');
+    buffer.writeln(widget.finding.message);
+    buffer.writeln('');
+    
+    if (widget.finding.filePath != null) {
+      buffer.writeln('File: ${widget.finding.filePath}');
+    }
+    if (widget.finding.lineNumber != null) {
+      buffer.writeln('Line: ${widget.finding.lineNumber}');
+    }
+    buffer.writeln('');
+    
+    if (widget.finding.codeSnippet != null) {
+      buffer.writeln('Code Snippet:');
+      buffer.writeln(widget.finding.codeSnippet);
+      buffer.writeln('');
+    }
+    
+    if (widget.finding.suggestedFix != null) {
+      buffer.writeln('Suggested Fix:');
+      buffer.writeln(widget.finding.suggestedFix);
+    }
+
+    await Share.share(buffer.toString(), subject: 'Code Finding');
   }
 
   @override
@@ -151,14 +282,26 @@ class _FindingDetailModalState extends State<FindingDetailModal> {
                       _getAgentIcon(widget.finding.agentType),
                     ),
                     const SizedBox(height: 16),
-                    // File Path
+                    // File Path with GitHub link
                     if (widget.finding.filePath != null &&
                         widget.finding.filePath!.isNotEmpty) ...[
-                      _buildDetailRow(
-                        context,
-                        'File',
-                        widget.finding.filePath!,
-                        Icons.description,
+                      Row(
+                        children: [
+                          Expanded(
+                            child: _buildDetailRow(
+                              context,
+                              'File',
+                              widget.finding.filePath!,
+                              Icons.description,
+                            ),
+                          ),
+                          if (widget.finding.lineNumber != null)
+                            IconButton(
+                              icon: const Icon(Icons.open_in_new),
+                              onPressed: _openGitHubLink,
+                              tooltip: 'Open in GitHub',
+                            ),
+                        ],
                       ),
                       const SizedBox(height: 16),
                     ],
@@ -191,7 +334,7 @@ class _FindingDetailModalState extends State<FindingDetailModal> {
                         style: Theme.of(context).textTheme.bodyLarge,
                       ),
                     ),
-                    // Code Snippet
+                    // Code Snippet with Context
                     if (widget.finding.codeSnippet != null &&
                         widget.finding.codeSnippet!.isNotEmpty) ...[
                       const SizedBox(height: 24),
@@ -207,13 +350,22 @@ class _FindingDetailModalState extends State<FindingDetailModal> {
                                   fontWeight: FontWeight.bold,
                                 ),
                           ),
-                          IconButton(
-                            icon: const Icon(Icons.copy),
-                            onPressed: () => _copyToClipboard(
-                              widget.finding.codeSnippet!,
-                              'Code snippet',
-                            ),
-                            tooltip: 'Copy code snippet',
+                          Row(
+                            children: [
+                              IconButton(
+                                icon: const Icon(Icons.copy),
+                                onPressed: () => _copyToClipboard(
+                                  widget.finding.codeSnippet!,
+                                  'Code snippet',
+                                ),
+                                tooltip: 'Copy code snippet',
+                              ),
+                              IconButton(
+                                icon: const Icon(Icons.share),
+                                onPressed: _shareFinding,
+                                tooltip: 'Share finding',
+                              ),
+                            ],
                           ),
                         ],
                       ),
@@ -224,19 +376,47 @@ class _FindingDetailModalState extends State<FindingDetailModal> {
                           color: Theme.of(context).colorScheme.surfaceVariant,
                           borderRadius: BorderRadius.circular(8),
                         ),
-                        child: HighlightView(
-                          widget.finding.codeSnippet!,
-                          language: 'dart',
-                          theme: githubTheme,
-                          padding: const EdgeInsets.all(8),
-                          textStyle: TextStyle(
-                            fontFamily: 'monospace',
-                            fontSize: 12,
-                          ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            // Context code with line numbers
+                            if (widget.finding.lineNumber != null)
+                              Container(
+                                padding: const EdgeInsets.all(8),
+                                decoration: BoxDecoration(
+                                  color: Theme.of(context).colorScheme.surface,
+                                  borderRadius: BorderRadius.circular(4),
+                                ),
+                                child: SelectableText(
+                                  _buildContextCode(
+                                    widget.finding.codeSnippet,
+                                    widget.finding.lineNumber,
+                                  ),
+                                  style: TextStyle(
+                                    fontFamily: 'monospace',
+                                    fontSize: 12,
+                                  ),
+                                ),
+                              )
+                            else
+                              HighlightView(
+                                widget.finding.codeSnippet!,
+                                language: _detectLanguage(
+                                  widget.finding.filePath,
+                                  widget.finding.codeSnippet,
+                                ),
+                                theme: githubTheme,
+                                padding: const EdgeInsets.all(8),
+                                textStyle: TextStyle(
+                                  fontFamily: 'monospace',
+                                  fontSize: 12,
+                                ),
+                              ),
+                          ],
                         ),
                       ),
                     ],
-                    // Suggested Fix
+                    // Suggested Fix with Side-by-Side Comparison
                     if (widget.finding.suggestedFix != null &&
                         widget.finding.suggestedFix!.isNotEmpty) ...[
                       const SizedBox(height: 24),
@@ -252,47 +432,179 @@ class _FindingDetailModalState extends State<FindingDetailModal> {
                                   fontWeight: FontWeight.bold,
                                 ),
                           ),
-                          IconButton(
-                            icon: const Icon(Icons.copy),
-                            onPressed: () => _copyToClipboard(
-                              widget.finding.suggestedFix!,
-                              'Suggested fix',
-                            ),
-                            tooltip: 'Copy suggested fix',
+                          Row(
+                            children: [
+                              IconButton(
+                                icon: Icon(
+                                  _showComparison 
+                                      ? Icons.view_agenda 
+                                      : Icons.compare_arrows,
+                                ),
+                                onPressed: () {
+                                  setState(() => _showComparison = !_showComparison);
+                                },
+                                tooltip: _showComparison 
+                                    ? 'Show single view' 
+                                    : 'Show comparison',
+                              ),
+                              IconButton(
+                                icon: const Icon(Icons.copy),
+                                onPressed: () => _copyToClipboard(
+                                  widget.finding.suggestedFix!,
+                                  'Suggested fix',
+                                ),
+                                tooltip: 'Copy suggested fix',
+                              ),
+                            ],
                           ),
                         ],
                       ),
                       const SizedBox(height: 8),
-                      Container(
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: Colors.green.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(color: Colors.green, width: 1),
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                      if (_showComparison && widget.finding.codeSnippet != null)
+                        // Side-by-side comparison
+                        Row(
                           children: [
-                            Text(
-                              widget.finding.suggestedFix!,
-                              style: Theme.of(context).textTheme.bodyLarge,
+                            Expanded(
+                              child: Container(
+                                padding: const EdgeInsets.all(12),
+                                decoration: BoxDecoration(
+                                  color: Theme.of(context).colorScheme.errorContainer.withOpacity(0.3),
+                                  borderRadius: BorderRadius.circular(8),
+                                  border: Border.all(color: Colors.red, width: 1),
+                                ),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      'Original',
+                                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                                            fontWeight: FontWeight.bold,
+                                            color: Colors.red,
+                                          ),
+                                    ),
+                                    const SizedBox(height: 8),
+                                    SelectableText(
+                                      widget.finding.codeSnippet!,
+                                      style: TextStyle(
+                                        fontFamily: 'monospace',
+                                        fontSize: 12,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
                             ),
-                            const SizedBox(height: 12),
-                            FilledButton.icon(
-                              onPressed: () {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                    content: Text('Apply fix functionality coming soon'),
-                                  ),
-                                );
-                              },
-                              icon: const Icon(Icons.check),
-                              label: const Text('Apply Fix'),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Container(
+                                padding: const EdgeInsets.all(12),
+                                decoration: BoxDecoration(
+                                  color: Colors.green.withOpacity(0.1),
+                                  borderRadius: BorderRadius.circular(8),
+                                  border: Border.all(color: Colors.green, width: 1),
+                                ),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      'Fixed',
+                                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                                            fontWeight: FontWeight.bold,
+                                            color: Colors.green,
+                                          ),
+                                    ),
+                                    const SizedBox(height: 8),
+                                    SelectableText(
+                                      widget.finding.suggestedFix!,
+                                      style: TextStyle(
+                                        fontFamily: 'monospace',
+                                        fontSize: 12,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
                             ),
                           ],
+                        )
+                      else
+                        // Single view
+                        Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: Colors.green.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(color: Colors.green, width: 1),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              HighlightView(
+                                widget.finding.suggestedFix!,
+                                language: _detectLanguage(
+                                  widget.finding.filePath,
+                                  widget.finding.suggestedFix,
+                                ),
+                                theme: githubTheme,
+                                padding: const EdgeInsets.all(8),
+                                textStyle: TextStyle(
+                                  fontFamily: 'monospace',
+                                  fontSize: 12,
+                                ),
+                              ),
+                              const SizedBox(height: 12),
+                              FilledButton.icon(
+                                onPressed: () {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text('Apply fix functionality coming soon'),
+                                    ),
+                                  );
+                                },
+                                icon: const Icon(Icons.check),
+                                label: const Text('Apply Fix'),
+                              ),
+                            ],
+                          ),
                         ),
-                      ),
                     ],
+                    // Related Findings Section (placeholder)
+                    const SizedBox(height: 24),
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).colorScheme.surfaceVariant,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Icon(
+                                Icons.link,
+                                size: 20,
+                                color: Theme.of(context).colorScheme.primary,
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                'Related Findings',
+                                style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            'Other findings in the same file will appear here',
+                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                                ),
+                          ),
+                        ],
+                      ),
+                    ),
                     const SizedBox(height: 24),
                     // Actions
                     Row(
