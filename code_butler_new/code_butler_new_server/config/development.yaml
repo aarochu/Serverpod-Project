@@ -39,7 +39,8 @@ redis:
 githubToken: YOUR_GITHUB_TOKEN
 
 # Gemini API configuration
-geminiApiKey: AIzaSyA7Bk70ZLt0Wyw_UC9dHrrrdsmA36rnmbk
+# Set via environment variable: GEMINI_API_KEY
+geminiApiKey: ${GEMINI_API_KEY}
 
 # Agent configuration
 agents:

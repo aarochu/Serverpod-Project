@@ -52,6 +52,10 @@ Thumbs.db
 *.pem
 config/github_oauth.yaml
 config/gemini_api.yaml
+**/config/passwords.yaml
+**/config/*.yaml
+!**/config/development.yaml.example
+!**/config/production.yaml.example
 
 # Database
 *.db

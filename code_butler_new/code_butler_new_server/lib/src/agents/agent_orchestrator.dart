@@ -165,12 +165,9 @@ class AgentOrchestrator {
         try {
           // Generate documentation
           final docAgent = DocumentationAgent();
-          // Initialize with API key from environment variable or hardcoded for demo
-          // In Serverpod 3, custom config values need to be accessed differently
-          // For now, using environment variable or hardcoded value
-          final geminiApiKey = Platform.environment['GEMINI_API_KEY'] ?? 
-                               'AIzaSyA7Bk70ZLt0Wyw_UC9dHrrrdsmA36rnmbk';
-          if (geminiApiKey.isNotEmpty && geminiApiKey != 'YOUR_GEMINI_API_KEY') {
+          // Initialize with API key from environment variable
+          final geminiApiKey = Platform.environment['GEMINI_API_KEY'] ?? '';
+          if (geminiApiKey.isNotEmpty) {
             docAgent.initialize(geminiApiKey);
           }
           
