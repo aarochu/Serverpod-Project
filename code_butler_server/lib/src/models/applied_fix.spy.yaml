@@ -7,6 +7,6 @@ fields:
   status: String
   prUrl: String?
 indexes:
-  - findingId
-  - status
+  - fields: [findingId]
+  - fields: [status]
 

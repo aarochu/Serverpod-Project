@@ -9,7 +9,7 @@ fields:
   occurrenceCount: int
   lastSeen: DateTime
 indexes:
-  - language
-  - category
-  - confidence
+  - fields: [language]
+  - fields: [category]
+  - fields: [confidence]
 

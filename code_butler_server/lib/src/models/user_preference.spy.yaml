@@ -7,6 +7,6 @@ fields:
   frequency: int
   lastUpdated: DateTime
 indexes:
-  - userId
-  - findingType
+  - fields: [userId]
+  - fields: [findingType]
 

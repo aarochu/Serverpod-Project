@@ -16,7 +16,7 @@ database:
 logging:
   logAllQueries: true
   logSlowQueries: true
-  logLevel: info
+  logLevel: verbose
 
 # GitHub API configuration
 githubToken: YOUR_GITHUB_TOKEN

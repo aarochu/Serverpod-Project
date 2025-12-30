@@ -10,7 +10,7 @@ fields:
   startedAt: DateTime?
   completedAt: DateTime?
 indexes:
-  - status
-  - priority
-  - createdAt
+  - fields: [status]
+  - fields: [priority]
+  - fields: [createdAt]
 

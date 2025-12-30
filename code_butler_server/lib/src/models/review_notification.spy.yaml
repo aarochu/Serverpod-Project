@@ -8,7 +8,7 @@ fields:
   read: bool
   createdAt: DateTime
 indexes:
-  - userId
-  - read
-  - createdAt
+  - fields: [userId]
+  - fields: [read]
+  - fields: [createdAt]
 

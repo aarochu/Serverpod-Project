@@ -8,6 +8,6 @@ fields:
   queryCount: int?
   createdAt: DateTime
 indexes:
-  - agentType
-  - createdAt
+  - fields: [agentType]
+  - fields: [createdAt]
 
