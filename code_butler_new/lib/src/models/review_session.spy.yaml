@@ -1,0 +1,13 @@
+class: ReviewSession
+table: code_butler_review_session
+fields:
+  pullRequestId: int
+  status: String
+  currentFile: String?
+  filesProcessed: int
+  totalFiles: int
+  progressPercent: double
+  errorMessage: String?
+  createdAt: DateTime
+  updatedAt: DateTime
+

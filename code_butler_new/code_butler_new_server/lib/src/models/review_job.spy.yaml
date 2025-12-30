@@ -1,0 +1,12 @@
+class: ReviewJob
+table: review_jobs
+fields:
+  pullRequestId: int
+  status: String
+  priority: int
+  retryCount: int
+  errorMessage: String?
+  createdAt: DateTime
+  startedAt: DateTime?
+  completedAt: DateTime?
+

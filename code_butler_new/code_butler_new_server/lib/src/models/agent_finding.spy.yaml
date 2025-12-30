@@ -1,0 +1,14 @@
+class: AgentFinding
+table: agent_findings
+fields:
+  pullRequestId: int
+  agentType: String
+  severity: String
+  category: String
+  message: String
+  filePath: String?
+  lineNumber: int?
+  codeSnippet: String?
+  suggestedFix: String?
+  createdAt: DateTime
+

@@ -1,0 +1,40 @@
+emailIdp:
+  - login:
+  - startRegistration:
+  - verifyRegistrationCode:
+  - finishRegistration:
+  - startPasswordReset:
+  - verifyPasswordResetCode:
+  - finishPasswordReset:
+jwtRefresh:
+  - refreshAccessToken:
+healthCheck:
+  - healthCheck:
+metrics:
+  - getRepositoryHealth:
+  - getTrends:
+  - getMostProblematicFiles:
+  - getAgentEffectiveness:
+  - getReviewStats:
+notification:
+  - getNotifications:
+  - markAsRead:
+  - getUnreadCount:
+pullRequest:
+  - createPullRequest:
+  - listPullRequests:
+  - getPullRequest:
+repository:
+  - createRepository:
+  - listRepositories:
+  - getRepositoryByUrl:
+review:
+  - startReview:
+  - getReviewStatus:
+  - getFindings:
+  - watchReviewProgress:
+webhook:
+  - handlePullRequest:
+  - handlePush:
+greeting:
+  - hello:

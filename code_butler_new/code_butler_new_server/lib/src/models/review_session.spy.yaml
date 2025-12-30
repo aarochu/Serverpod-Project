@@ -1,0 +1,13 @@
+class: ReviewSession
+table: review_sessions
+fields:
+  pullRequestId: int
+  status: String
+  currentFile: String?
+  filesProcessed: int
+  totalFiles: int
+  progressPercent: double
+  errorMessage: String?
+  createdAt: DateTime
+  updatedAt: DateTime
+

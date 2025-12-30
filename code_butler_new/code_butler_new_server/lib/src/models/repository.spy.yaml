@@ -1,0 +1,9 @@
+class: Repository
+table: repositories
+fields:
+  name: String
+  url: String
+  owner: String
+  defaultBranch: String
+  lastReviewedAt: DateTime?
+

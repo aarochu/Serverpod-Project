@@ -1,0 +1,10 @@
+class: ReviewNotification
+table: review_notifications
+fields:
+  userId: String
+  reviewSessionId: int
+  type: String
+  message: String
+  read: bool
+  createdAt: DateTime
+

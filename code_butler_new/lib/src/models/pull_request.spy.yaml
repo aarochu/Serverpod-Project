@@ -1,0 +1,13 @@
+class: PullRequest
+table: code_butler_pull_request
+fields:
+  repositoryId: int
+  prNumber: int
+  title: String
+  status: String
+  baseBranch: String
+  headBranch: String
+  filesChanged: int
+  createdAt: DateTime
+  updatedAt: DateTime
+

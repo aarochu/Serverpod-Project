@@ -1,0 +1,11 @@
+class: PatternLibrary
+table: pattern_libraries
+fields:
+  pattern: String
+  language: String
+  category: String
+  fixTemplate: String
+  confidence: double
+  occurrenceCount: int
+  lastSeen: DateTime
+

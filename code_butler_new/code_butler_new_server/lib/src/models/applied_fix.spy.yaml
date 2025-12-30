@@ -1,0 +1,9 @@
+class: AppliedFix
+table: applied_fixes
+fields:
+  findingId: int
+  fixCode: String
+  appliedAt: DateTime
+  status: String
+  prUrl: String?
+

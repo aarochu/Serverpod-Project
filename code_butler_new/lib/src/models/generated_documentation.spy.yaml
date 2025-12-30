@@ -1,0 +1,13 @@
+class: GeneratedDocumentation
+table: code_butler_generated_documentation
+fields:
+  pullRequestId: int
+  filePath: String
+  functionName: String?
+  originalCode: String
+  generatedDoc: String
+  verificationStatus: String
+  verificationIssues: String?
+  createdAt: DateTime
+  updatedAt: DateTime
+

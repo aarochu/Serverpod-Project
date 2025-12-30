@@ -1,0 +1,9 @@
+class: UserPreference
+table: user_preferences
+fields:
+  userId: String
+  findingType: String
+  action: String
+  frequency: int
+  lastUpdated: DateTime
+

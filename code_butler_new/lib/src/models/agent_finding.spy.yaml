@@ -1,0 +1,14 @@
+class: AgentFinding
+table: code_butler_agent_finding
+fields:
+  pullRequestId: int
+  agentType: String
+  severity: String
+  category: String
+  message: String
+  filePath: String?
+  lineNumber: int?
+  codeSnippet: String?
+  suggestedFix: String?
+  createdAt: DateTime
+

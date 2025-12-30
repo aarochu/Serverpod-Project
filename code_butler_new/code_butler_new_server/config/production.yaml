@@ -1,0 +1,20 @@
+server:
+  publicHost: localhost
+  publicPort: 8080
+  publicScheme: https
+  privateHost: localhost
+  privatePort: 8081
+  privateScheme: https
+
+database:
+  host: localhost
+  port: 5432
+  name: code_butler
+  username: postgres
+  password: password
+
+logging:
+  logAllQueries: false
+  logSlowQueries: true
+  logLevel: warning
+

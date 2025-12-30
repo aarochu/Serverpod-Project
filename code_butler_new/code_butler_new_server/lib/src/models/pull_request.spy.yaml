@@ -1,0 +1,13 @@
+class: PullRequest
+table: pull_requests
+fields:
+  repositoryId: int
+  prNumber: int
+  title: String
+  status: String
+  baseBranch: String
+  headBranch: String
+  filesChanged: int
+  createdAt: DateTime
+  updatedAt: DateTime
+

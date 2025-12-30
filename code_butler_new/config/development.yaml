@@ -1,0 +1,58 @@
+server:
+  publicHost: localhost
+  publicPort: 8080
+  publicScheme: http
+  privateHost: localhost
+  privatePort: 8081
+  privateScheme: http
+
+database:
+  host: localhost
+  port: 5432
+  name: code_butler
+  username: postgres
+  password: password
+
+# GitHub API configuration
+githubToken: YOUR_GITHUB_TOKEN
+
+# Gemini API configuration
+geminiApiKey: YOUR_GEMINI_API_KEY
+
+# Agent configuration
+agents:
+  maxFilesToProcess: 100
+  fileTimeoutSeconds: 30
+  concurrentTaskLimit: 5
+
+# Autofix configuration
+autofix:
+  enabled: true
+  createPR: true
+  confidenceThreshold: 0.7
+
+# Caching configuration
+caching:
+  enabled: true
+  ttlSeconds: 3600
+  maxCacheSize: 1000
+
+# Optimization configuration
+optimization:
+  maxFilesPerReview: 100
+  maxTimePerReview: 300
+  maxCriticalFindings: 10
+  skipTestFiles: true
+  skipGeneratedCode: true
+
+# Webhook configuration
+webhooks:
+  secret: YOUR_WEBHOOK_SECRET
+  enabled: true
+
+# Job processing configuration
+jobs:
+  maxWorkers: 3
+  retryAttempts: 3
+  retryDelaySeconds: 60
+

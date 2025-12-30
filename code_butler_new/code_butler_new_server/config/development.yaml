@@ -1,0 +1,80 @@
+# Configuration for the main API server.
+apiServer:
+  port: 8080
+  publicHost: localhost
+  publicPort: 8080
+  publicScheme: http
+
+# Configuration for the Insights server.
+insightsServer:
+  port: 8081
+  publicHost: localhost
+  publicPort: 8081
+  publicScheme: http
+
+# Configuration for the web server.
+webServer:
+  port: 8082
+  publicHost: localhost
+  publicPort: 8082
+  publicScheme: http
+
+# This is the database setup for your server.
+database:
+  host: localhost
+  port: 8090
+  name: code_butler_new
+  user: postgres
+  #requireSsl: true # defaults to false
+  #isUnixSocket: true # defaults to false
+  #maxConnectionCount: 10 # Defaults to 10, a negative or null value removes the limit
+
+# This is the setup for Redis.
+redis:
+  enabled: false
+  host: localhost
+  port: 8091
+
+# GitHub API configuration
+githubToken: YOUR_GITHUB_TOKEN
+
+# Gemini API configuration
+geminiApiKey: AIzaSyA7Bk70ZLt0Wyw_UC9dHrrrdsmA36rnmbk
+
+# Agent configuration
+agents:
+  maxFilesToProcess: 100
+  fileTimeoutSeconds: 30
+  concurrentTaskLimit: 5
+
+# Autofix configuration
+autofix:
+  enabled: true
+  createPR: true
+  confidenceThreshold: 0.7
+
+# Caching configuration
+caching:
+  enabled: true
+  ttlSeconds: 3600
+  maxCacheSize: 1000
+
+# Optimization configuration
+optimization:
+  maxFilesPerReview: 100
+  maxTimePerReview: 300
+  maxCriticalFindings: 10
+  skipTestFiles: true
+  skipGeneratedCode: true
+
+# Webhook configuration
+webhooks:
+  secret: YOUR_WEBHOOK_SECRET
+  enabled: true
+
+# Job processing configuration
+jobs:
+  maxWorkers: 3
+  retryAttempts: 3
+  retryDelaySeconds: 60
+

@@ -1,0 +1,9 @@
+class: WebhookEvent
+table: webhook_events
+fields:
+  eventType: String
+  payload: String
+  signature: String?
+  processed: bool
+  createdAt: DateTime
+

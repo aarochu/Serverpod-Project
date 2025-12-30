@@ -63,3 +63,7 @@ docker-compose.override.yml
 # Generated files (will be regenerated)
 code_butler_client/lib/src/protocol/
 
+# Old version (replaced by code_butler_new)
+code_butler_server/
+code_butler_flutter/
+code_butler_client/
