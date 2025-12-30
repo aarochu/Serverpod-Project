@@ -14,9 +14,7 @@ database:
   password: password
 
 logging:
-  logAllQueries: true
-  logSlowQueries: true
-  logLevel: verbose
+  logLevel: normal
 
 # GitHub API configuration
 githubToken: YOUR_GITHUB_TOKEN
