@@ -1,5 +1,4 @@
 class: PerformanceLog
-table: code_butler_performance_log
 fields:
   agentType: String
   filePath: String?
@@ -7,7 +6,3 @@ fields:
   memoryUsageMB: double?
   queryCount: int?
   createdAt: DateTime
-indexes:
-  - fields: [agentType]
-  - fields: [createdAt]
-

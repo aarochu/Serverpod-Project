@@ -1,11 +1,7 @@
 class: WebhookEvent
-table: code_butler_webhook_event
 fields:
   eventType: String
   payload: String
   signature: String?
   processed: bool
   createdAt: DateTime
-indexes:
-  - fields: [processed, eventType]
-

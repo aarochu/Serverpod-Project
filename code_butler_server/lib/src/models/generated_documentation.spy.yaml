@@ -1,5 +1,4 @@
 class: GeneratedDocumentation
-table: code_butler_generated_documentation
 fields:
   pullRequestId: int
   filePath: String

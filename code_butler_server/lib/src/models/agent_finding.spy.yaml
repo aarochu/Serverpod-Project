@@ -1,5 +1,4 @@
 class: AgentFinding
-table: code_butler_agent_finding
 fields:
   pullRequestId: int
   agentType: String

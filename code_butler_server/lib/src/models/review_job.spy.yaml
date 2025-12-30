@@ -1,5 +1,4 @@
 class: ReviewJob
-table: code_butler_review_job
 fields:
   pullRequestId: int
   status: String
@@ -9,8 +8,3 @@ fields:
   createdAt: DateTime
   startedAt: DateTime?
   completedAt: DateTime?
-indexes:
-  - fields: [status]
-  - fields: [priority]
-  - fields: [createdAt]
-

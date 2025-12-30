@@ -1,5 +1,4 @@
 class: ReviewNotification
-table: code_butler_review_notification
 fields:
   userId: String
   reviewSessionId: int
@@ -7,8 +6,3 @@ fields:
   message: String
   read: bool
   createdAt: DateTime
-indexes:
-  - fields: [userId]
-  - fields: [read]
-  - fields: [createdAt]
-

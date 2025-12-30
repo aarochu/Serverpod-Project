@@ -1,5 +1,4 @@
 class: Repository
-table: code_butler_repository
 fields:
   name: String
   url: String

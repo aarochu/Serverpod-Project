@@ -1,5 +1,4 @@
 class: ReviewSession
-table: code_butler_review_session
 fields:
   pullRequestId: int
   status: String
