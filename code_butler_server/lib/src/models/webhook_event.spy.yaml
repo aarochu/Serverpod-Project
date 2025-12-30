@@ -7,6 +7,5 @@ fields:
   processed: bool
   createdAt: DateTime
 indexes:
-  - fields: [processed]
-  - fields: [eventType]
+  - fields: [processed, eventType]
 

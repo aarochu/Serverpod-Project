@@ -13,9 +13,6 @@ database:
   username: postgres
   password: password
 
-logging:
-  logLevel: normal
-
 # GitHub API configuration
 githubToken: YOUR_GITHUB_TOKEN
 
